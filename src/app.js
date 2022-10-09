@@ -1,5 +1,7 @@
 const express = require('express');
-const connection = require('./connection');
+const connection = require('./models/connection');
+const travelModel = require('./models/travel.model');
+const passengerModels = require('./models/passenger.model');
 
 const app = express();
 
@@ -11,10 +13,11 @@ const TRAVEL_IN_PROGRESS = 3;
 const TRAVEL_FINISHED = 4;
 
 const doesPassengerExist = async (passengerId) => {
-  const [[passenger]] = await connection.execute(
-    'SELECT * FROM passengers WHERE id = ?',
-    [passengerId],
-  );
+  // const [[passenger]] = await connection.execute(
+  //   'SELECT * FROM passengers WHERE id = ?',
+  //   [passengerId],
+  // );
+  const passenger = passengerModels.findById(passengerId);
   if (passenger) return true;
   return false;
 };
@@ -34,76 +37,48 @@ app.post('/passengers/:passengerId/request/travel', async (req, res) => {
   const { startingAddress, endingAddress, waypoints } = req.body;
 
   if (await doesPassengerExist(passengerId)) {
-    const [resultTravel] = await connection.execute(
-      `INSERT INTO travels 
-          (passenger_id, starting_address, ending_address) VALUE (?, ?, ?)`,
-      [
-        passengerId,
-        startingAddress,
-        endingAddress,
-      ],
-    );
-    await Promise.all(saveWaypoints(waypoints, resultTravel.insertId));
+    const travelId = await travelModel.insert({ passengerId, startingAddress, endingAddress });
+    await Promise.all(saveWaypoints(waypoints, travelId));
 
-    const [[response]] = await connection.execute(
-      'SELECT * FROM travels WHERE id = ?',
-      [resultTravel.insertId],
-    );
-    return res.status(201).json(response);
+    const travel = await travelModel.findById(travelId);
+    return res.status(201).json(travel);
   }
 
   res.status(500).json({ message: 'Ocorreu um erro' });
 });
 
 app.get('/drivers/open/travels', async (_req, res) => {
-  const [result] = await connection.execute(
-    'SELECT * FROM travels WHERE travel_status_id = ?',
-    [WAITING_DRIVER],
-  );
+  const [result] = await travelModel.findByTravelStatusId(WAITING_DRIVER);
   res.status(200).json(result);
 });
 
 app.put('/drivers/:driverId/travels/:travelId/assign', async (req, res) => {
   const { travelId, driverId } = req.params;
-  await connection.execute(
-    'UPDATE travels SET driver_id = ? WHERE id = ?',
-    [driverId, travelId],
-  );
-  await connection.execute(
-    'UPDATE travels SET travel_status_id = ? WHERE id = ? AND driver_id = ?',
-    [DRIVER_ON_THE_WAY, travelId, driverId],
-  );
-  const [[result]] = await connection.execute(
-    'SELECT * FROM travels WHERE id = ?',
-    [travelId],
-  );
-  res.status(200).json(result);
+  
+  await travelModel.updateById(travelId, { driverId, travelStatusId: DRIVER_ON_THE_WAY });
+  const travel = await travelModel.findById(travelId);
+
+  res.status(200).json(travel);
 });
 
 app.put('/drivers/:driverId/travels/:travelId/start', async (req, res) => {
   const { travelId, driverId } = req.params;
-  await connection.execute(
-    'UPDATE travels SET travel_status_id = ? WHERE id = ? AND driver_id = ?',
-    [TRAVEL_IN_PROGRESS, travelId, driverId],
-  );
-  const [[result]] = await connection.execute(
-    'SELECT * FROM travels WHERE id = ?',
-    [travelId],
-  );
-  res.status(200).json(result);
+
+  await travelModel.updateById(travelId, { driverId, travelStatusId: TRAVEL_IN_PROGRESS });
+
+  const travel = await travelModel.findById(travelId);
+
+  res.status(200).json(travel);
 });
 
 app.put('/drivers/:driverId/travels/:travelId/end', async (req, res) => {
   const { travelId, driverId } = req.params;
-  await connection.execute(
-    'UPDATE travels SET travel_status_id = ? WHERE id = ? AND driver_id = ?',
-    [TRAVEL_FINISHED, travelId, driverId],
-  );
-  const [[result]] = await connection.execute(
-    'SELECT * FROM travels WHERE id = ?',
-    [travelId],
-  );
-  res.status(200).json(result);
+
+  await travelModel.updateById(travelId, { driverId, travelStatusId: TRAVEL_FINISHED });
+
+  const travel = await travelModel.findById(travelId);
+
+  res.status(200).json(travel);
 });
 
 module.exports = app;
