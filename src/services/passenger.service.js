@@ -1,4 +1,5 @@
 const { travelModel, passengerModel, waypointModel } = require('../models');
+const { validateRequestTravelSchema } = require('./validations/validationsInputValues');
 
 const doesPassengerExist = async (passengerId) => {
   const passenger = passengerModel.findById(passengerId);
@@ -20,6 +21,12 @@ const saveWaypoints = (waypoints, travelId) => {
 };
 
 const requestTravel = async (passengerId, startingAddress, endingAddress, waypoints) => {
+const validateResult = validateRequestTravelSchema(
+  passengerId, startingAddress, endingAddress, waypoints,
+);
+
+if (validateResult.type) return validateResult;
+
   if (await doesPassengerExist(passengerId)) {
       const travelId = await travelModel.insert({
           passengerId,

@@ -1,8 +1,14 @@
 const { expect } = require('chai');
+const sinon = require('sinon');
 const { requestTravel } = require('../../../src/services/passenger.service');
+const { travelModel, passengerModel, waypointModel } = require('../../../src/models');
+const { travelResponse } = require('./mocks/passenger.service.mock');
 
 describe('Verricficando service pessoa passageira', function () {
   it('sem pontos de parada é realizada com sucesso', async function () {
+    sinon.stub(passengerModel, 'findById').resolves(true); // retorna verdadeiro sinalizando que o passageiro existe
+    sinon.stub(travelModel, 'insert').resolves(1); // retorna travel com ID 1
+    sinon.stub(travelModel, 'findById').resolves(travelResponse);
     const WAITING_DRIVER = 1;
     const passenger = {
       id: 1,
@@ -16,19 +22,23 @@ describe('Verricficando service pessoa passageira', function () {
       passenger.endingAddress,
     );
 
-    expect(travel).to.be.deep.equal({
+    expect(travel.message).to.be.deep.equal({
       id: 1,
       passengerId: 1,
       driverId: null,
       travelStatusId: WAITING_DRIVER,
       startingAddress: 'Rua X',
       endingAddress: 'Rua Y',
-      requestDate: '2022-10-09T03:04:04.374Z',
+      requestDate: '2022-08-24T03:04:04.374Z',
     });
   });
 
   it('com pontos de parada é realizada com sucesso', async function () {
     // arrange
+    sinon.stub(passengerModel, 'findById').resolves(true); // retorna verdadeiro sinalizando que o passageiro existe
+    sinon.stub(travelModel, 'insert').resolves(1); // retorna travel com ID 1
+    sinon.stub(travelModel, 'findById').resolves(travelResponse);
+    sinon.stub(waypointModel, 'insert').resolves(1);
     const WAITING_DRIVER = 1;
     const passenger = {
       id: 1,
@@ -47,7 +57,7 @@ describe('Verricficando service pessoa passageira', function () {
       passenger.waypoints,
     );
     // assert
-    expect(travel).to.be.deep.equal({
+    expect(travel.message).to.be.deep.equal({
       id: 1,
       passengerId: 1,
       driverId: null,
@@ -76,5 +86,9 @@ describe('Verricficando service pessoa passageira', function () {
   // assert
   expect(error.type).to.equal('INVALID_VALUE');
   expect(error.message).to.equal('"endingAddress" contains an invalid value');
+  });
+
+  afterEach(function () {
+    sinon.restore();
   });
 });
