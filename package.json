@@ -8,7 +8,8 @@
     "test": "mocha tests/**/*.js --exit",
     "start": "node src/server.js",
     "debug": "nodemon --ignore coverage src/server.js",
-    "lint": "eslint --no-inline-config --no-error-on-unmatched-pattern -c .eslintrc.json . --ext .js, .jsx"
+    "lint": "eslint --no-inline-config --no-error-on-unmatched-pattern -c .eslintrc.json . --ext .js, .jsx",
+    "dev": "nodemon src/server.js"
   },
   "repository": {
     "type": "git",

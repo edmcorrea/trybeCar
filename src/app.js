@@ -2,6 +2,17 @@ const express = require('express');
 const { travelModel } = require('./models');
 const { passengerService } = require('./services');
 
+// const express = require('express');
+// const { passengerRoutes, driverRoutes } = require('./routers');
+
+// const app = express();
+// app.use(express.json());
+// app.use('/passengers', passengerRoutes);
+// app.use('/drivers', driverRoutes);
+
+// module.exports = app;
+
+
 const app = express();
 
 app.use(express.json());
@@ -10,25 +21,6 @@ const WAITING_DRIVER = 1;
 const DRIVER_ON_THE_WAY = 2;
 const TRAVEL_IN_PROGRESS = 3;
 const TRAVEL_FINISHED = 4;
-
-// const doesPassengerExist = async (passengerId) => {
-//   const passenger = passengerModels.findById(passengerId);
-//   if (passenger) return true;
-//   return false;
-// };
-
-// const saveWaypoints = (waypoints, travelId) => {
-//   if (waypoints && waypoints.length > 0) {
-//     return waypoints.map(async (value) => {
-//       await waypointModel.insert({
-//         address: value.address,
-//         stopOrder: value.stopOrder,
-//         travelId,
-//       });
-//     });
-//   }
-//   return [];
-// };
 
 app.post('/passengers/:passengerId/request/travel', async (req, res) => {
   const { passengerId } = req.params;

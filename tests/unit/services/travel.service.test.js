@@ -1,8 +1,8 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
-const { requestTravel } = require('../../../src/services/passenger.service');
+const { requestTravel } = require('../../../src/services/travel.service');
 const { travelModel, passengerModel, waypointModel } = require('../../../src/models');
-const { travelResponse } = require('./mocks/passenger.service.mock');
+const { travelResponse } = require('./mocks/travel.service.mock');
 
 describe('Verricficando service pessoa passageira', function () {
   it('sem pontos de parada é realizada com sucesso', async function () {
