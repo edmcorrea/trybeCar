@@ -12,7 +12,6 @@ const { passengerService } = require('./services');
 
 // module.exports = app;
 
-
 const app = express();
 
 app.use(express.json());
